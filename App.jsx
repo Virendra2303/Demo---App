@@ -1,37 +1,61 @@
-import { StyleSheet, Text, View, Image, Button } from 'react-native'
+import { StyleSheet, Text, View, Button, TextInput } from 'react-native'
 import {useState} from 'react'
-import { CreateAccount } from './Function/CreateAccount'
+import {SafeAreaView} from 'react-native-safe-area-context'
 const App = () => {
-  const [isSignedIn, setIsSignedIn] = useState(false)
-  const [isSignedUp, setIsSignedUp] = useState(false)
-  if(!isSignedIn && !isSignedUp) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Button title="Create Account" onPress={() => setIsSignedUp(true)} />
-        <Button title="Sign In" onPress={() => setIsSignedIn(true)} />
+  const [spent,setSpent] = useState(0)
+  const [expense,setExpense] = useState(0)
+  const [category,setCategory] = useState('')
+  const [description,setDescription] = useState('')
+
+  return (
+    <SafeAreaView>
+      <View>
+        <Text>Expense Tracker</Text>
       </View>
-    )
-  } else if(isSignedUp) {
-     return (
-      <View style ={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Button title="Back" onPress={() => setIsSignedUp(false)} />
-        <CreateAccount/>
-      </View> 
-     )
-  } else {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Button title="Back" onPress={() => setIsSignedIn(false)} />
-        <Text style={{fontSize: 90, fontWeight: 'bold', color: 'blue'}}>You Already Have an Account</Text>
+      <View>
+        <Text>Total Spent:</Text>
+        <Text>{spent}</Text>
       </View>
-    )
-  }
- 
+      <View>
+        <TextInput
+          placeholder="Enter expense amount"
+          keyboardType="numeric"
+          onChangeText={setExpense}
+          value={expense}
+        />
+        <TextInput
+          placeholder="Enter Category"
+          keyboardType="text"
+          onChangeText={setCategory}
+          value={category}
+        />
+        <TextInput
+          placeholder="Enter Description"
+          keyboardType="text"
+          onChangeText={setDescription}
+          value={description}
+        />
+      </View>
+      <View>
+        <Button title='Add Expense' onPress={() => {setSpent(spent + parseInt(expense) || 0)
+          setExpense(0)
+          setCategory('')
+          setDescription('')
+        }} />
+      </View>
+      {spent === 0 && (
+        <Text>No expenses recorded yet.</Text>
+      )}
+    </SafeAreaView>
+  )
 }
 
 export default App
 
 const styles = StyleSheet.create({
-  
-
+  header_style : {
+    flex : 1,
+    justifyContent : 'center',
+    alignItems : 'center'
+  }
 })
