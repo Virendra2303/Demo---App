@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Button, TextInput } from 'react-native'
+import { StyleSheet, Text, View, Button, TextInput, FlatList } from 'react-native'
 import {useState} from 'react'
 import {SafeAreaView} from 'react-native-safe-area-context'
 const App = () => {
@@ -6,6 +6,7 @@ const App = () => {
   const [expense,setExpense] = useState(0)
   const [category,setCategory] = useState('')
   const [description,setDescription] = useState('')
+  const [history,setHistory] = useState([])
 
   return (
     <SafeAreaView>
@@ -38,6 +39,7 @@ const App = () => {
       </View>
       <View>
         <Button title='Add Expense' onPress={() => {setSpent(spent + parseInt(expense) || 0)
+          setHistory((history) => [...history, {Amount : expense, Category : category, Description : description}])
           setExpense(0)
           setCategory('')
           setDescription('')
@@ -45,6 +47,24 @@ const App = () => {
       </View>
       {spent === 0 && (
         <Text>No expenses recorded yet.</Text>
+      )}
+      {history.length > 0 && (
+        <><View>
+          <Text>Expense History:</Text>
+        </View><FlatList
+            data={history}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View>
+                <Text>Amount: {item.Amount}</Text>
+                <Text>Category: {item.Category}</Text>
+                <Text>Description: {item.Description}</Text>
+                <Button title='Delete' onPress={() => {
+                  setHistory((history) => history.filter((_, i) => i !== history.indexOf(item)))
+                  setSpent(spent - parseInt(item.Amount) || 0)
+                }} />
+              </View>
+            )} /></>
       )}
     </SafeAreaView>
   )
