@@ -7,9 +7,14 @@ const App = () => {
   const [category,setCategory] = useState('')
   const [description,setDescription] = useState('')
   const [history,setHistory] = useState([])
+  const [filterval,setFilterVal] = useState(["All"])
+  const [selectedfilter,setSelectedFilter] = useState("All")
 
+  const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter)
   return (
     <SafeAreaView>
+      {filterval.map((item) => (<Button title={item} onPress = {()=>setSelectedFilter(item)}>
+      </Button>))}
       <View>
         <Text>Expense Tracker</Text>
       </View>
@@ -40,6 +45,7 @@ const App = () => {
       <View>
         <Button title='Add Expense' onPress={() => {setSpent(spent + parseInt(expense) || 0)
           setHistory((history) => [...history, {Amount : expense, Category : category, Description : description}])
+          setFilterVal((filterval)=> { if (!filterval.includes(category)) { return [...filterval,category ]}  return filterval} )
           setExpense(0)
           setCategory('')
           setDescription('')
@@ -52,7 +58,7 @@ const App = () => {
         <><View>
           <Text>Expense History:</Text>
         </View><FlatList
-            data={history}
+            data={filterhistory}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <View>
