@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Button, TextInput, FlatList } from 'react-native'
+import { StyleSheet, Text, View, Button, TextInput, FlatList, Alert } from 'react-native'
 import {useState} from 'react'
 import {SafeAreaView} from 'react-native-safe-area-context'
 const App = () => {
@@ -9,8 +9,35 @@ const App = () => {
   const [history,setHistory] = useState([])
   const [filterval,setFilterVal] = useState(["All"])
   const [selectedfilter,setSelectedFilter] = useState("All")
-
+  
   const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter)
+  const addexpense = () => {
+    setSpent(spent + parseInt(expense) || 0)
+    if(expense>=1){
+      setHistory((history) => [...history, {Amount : expense.trim(), Category : category.trim(), Description : description.trim()}])
+      setFilterVal((filterval)=> { if (!filterval.includes(category.trim())) { return [...filterval,category.trim() ]}  return filterval} )
+    }
+    else{
+      Alert.alert("Please Enter Number only")
+    }    
+    setExpense(0)
+    setCategory('')
+    setDescription('')
+  }
+
+  const removeExpense = (item) => {
+    setHistory((history) => {
+      const newHistory = history.filter((_, i) => i !== history.indexOf(item))
+
+      if (!newHistory.some((expense) => expense.Category === item.Category)) {
+        setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
+      )
+      }
+    return newHistory
+    })
+    setSpent(spent - parseInt(item.Amount) || 0)
+  }
+
   return (
     <SafeAreaView>
       {filterval.map((item) => (<Button title={item} onPress = {()=>setSelectedFilter(item)}>
@@ -43,13 +70,7 @@ const App = () => {
         />
       </View>
       <View>
-        <Button title='Add Expense' onPress={() => {setSpent(spent + parseInt(expense) || 0)
-          setHistory((history) => [...history, {Amount : expense, Category : category, Description : description}])
-          setFilterVal((filterval)=> { if (!filterval.includes(category)) { return [...filterval,category ]}  return filterval} )
-          setExpense(0)
-          setCategory('')
-          setDescription('')
-        }} />
+        <Button title='Add Expense' onPress={addexpense} />
       </View>
       {spent === 0 && (
         <Text>No expenses recorded yet.</Text>
@@ -65,10 +86,7 @@ const App = () => {
                 <Text>Amount: {item.Amount}</Text>
                 <Text>Category: {item.Category}</Text>
                 <Text>Description: {item.Description}</Text>
-                <Button title='Delete' onPress={() => {
-                  setHistory((history) => history.filter((_, i) => i !== history.indexOf(item)))
-                  setSpent(spent - parseInt(item.Amount) || 0)
-                }} />
+                <Button title='Delete' onPress={() => removeExpense(item)} />
               </View>
             )} /></>
       )}
