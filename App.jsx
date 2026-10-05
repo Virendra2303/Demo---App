@@ -1,23 +1,26 @@
 // Import required React Native components and hooks
-import { StyleSheet, Text, View, Button, TextInput, FlatList, Alert,TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, TextInput, FlatList, Alert,TouchableOpacity } from 'react-native'
 import {useState} from 'react'
 import {SafeAreaView} from 'react-native-safe-area-context'
+import {useNavigation,NavigationContainer} from '@react-navigation/native'
+import {createNativeStackNavigator} from '@react-navigation/native-stack'
+import {Button} from '@react-navigation/elements'
 
 
-const App = () => {
 
+const HomeScreen = () => {
+  const navigation = useNavigation()
+  return (
+    <View>
+      <Text>Expense Tracker</Text>
+       <Button onPress = {() => navigation.navigate('AddExpense')}>
+        Add Expense
+      </Button>
+    </View>
+  )
+}
 
-  const [spent,setSpent] = useState(0) // Stores the total amount spent
-  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
-  const [category,setCategory] = useState('') // Stores the current expense category
-  const [description,setDescription] = useState('')  // Stores the current expense description
-  const [history,setHistory] = useState([]) // Stores the complete expense history
-  const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
-  const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
-
-  // Filters expenses based on the selected category
-  const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter) 
-
+const AddExpense = () => {
   // Adds a new expense to the history and updates filters
   const addexpense = () => {
     setSpent(spent + parseInt(expense) || 0)
@@ -33,128 +36,209 @@ const App = () => {
     setDescription('')
   }
 
-  // Removes an expense and updates the total and category filters
-  const removeExpense = (item) => {
-    setHistory((history) => {
-      const newHistory = history.filter((_, i) => i !== history.indexOf(item))
+  return (
+      <SafeAreaView>
+        {/* Capture expense details from the user */}
+        <View style ={styles.inputContainer}>
+          <TextInput
+            placeholder="Enter expense amount"
+            keyboardType="numeric"
+            onChangeText={setExpense}
+            value={expense}
+            style = {styles.input}
+          />
+          <TextInput
+            placeholder="Enter Category"
+            keyboardType="text"
+            onChangeText={setCategory}
+            value={category}
+            style = {styles.input}
+          />
+          <TextInput
+            placeholder="Enter Description"
+            keyboardType="text"
+            onChangeText={setDescription}
+            value={description}
+            style = {styles.input}
+          />
+        </View>
 
-      if (!newHistory.some((expense) => expense.Category === item.Category)) {
-        setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
-      )
-      }
-    return newHistory
-    })
-    setSpent(spent - parseInt(item.Amount) || 0)
-  }
+        {/* Add expense button */}
+        <View style = {styles.addButtonContainer}>
+          <TouchableOpacity style = {styles.addButton} onPress={addexpense} >
+            <Text style ={styles.addButtonText}>Add Expense</Text>
+          </TouchableOpacity> 
+        </View>
+      </SafeAreaView>
+  )
+}
+
+const Stack = createNativeStackNavigator()
+
+const RootStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name ='Home' component = {HomeScreen}/>
+      <Stack.Screen name = 'AddExpense' component = {AddExpense}/>
+    </Stack.Navigator>
+  )
+}
+const App = () => {
+ 
+  const [spent,setSpent] = useState(0) // Stores the total amount spent
+  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
+  const [category,setCategory] = useState('') // Stores the current expense category
+  const [description,setDescription] = useState('')  // Stores the current expense description
+  const [history,setHistory] = useState([]) // Stores the complete expense history
+  const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
+  const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
+  // // Filters expenses based on the selected category
+  // const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter) 
+
+  // // Adds a new expense to the history and updates filters
+  // const addexpense = () => {
+  //   setSpent(spent + parseInt(expense) || 0)
+  //   if(expense>=1){
+  //     setHistory((history) => [...history, {Amount : expense.trim(), Category : category.trim(), Description : description.trim()}])
+  //     setFilterVal((filterval)=> { if (!filterval.includes(category.trim())) { return [...filterval,category.trim() ]}  return filterval} )
+  //   }
+  //   else{
+  //     Alert.alert("Please Enter Number only")
+  //   }    
+  //   setExpense(0)
+  //   setCategory('')
+  //   setDescription('')
+  // }
+
+  // // Removes an expense and updates the total and category filters
+  // const removeExpense = (item) => {
+  //   setHistory((history) => {
+  //     const newHistory = history.filter((_, i) => i !== history.indexOf(item))
+
+  //     if (!newHistory.some((expense) => expense.Category === item.Category)) {
+  //       setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
+  //     )
+  //     }
+  //   return newHistory
+  //   })
+  //   setSpent(spent - parseInt(item.Amount) || 0)
+  // }
+
+  // return (
+    
+  //   <SafeAreaView style={styles.container}>
+      
+
+  //      {/* Display application header  */}
+  //     <View>
+  //       <Text style = {styles.header}>Expense Tracker</Text>
+  //     </View>
+
+  //     {/* Display total amount spent */}
+  //     <View style = {styles.spentCard}>
+  //       <Text style = {styles.spentLabel}>Total Spent:</Text>
+  //       <Text style ={styles.spentAmount}>{spent}</Text>
+  //     </View>
+      
+  //     {/* Display category filters  */}
+  //     <View style={styles.filterContainer}>
+  //       {filterval.map((item) => {
+
+  //       const selected = selectedfilter === item
+
+  //       return (
+  //         <TouchableOpacity
+  //           key={item}
+  //           style={[
+  //             styles.filterButton,
+  //             selected && styles.selectedFilter
+  //           ]}
+  //           onPress={() => setSelectedFilter(item)}
+  //         >
+  //           <Text
+  //             style={[
+  //               styles.filterText,
+  //               selected && styles.selectedFilterText
+  //             ]}
+  //           >
+  //           {item}
+  //           </Text>
+  //         </TouchableOpacity>
+  //         )
+  //         })}
+  //     </View>
+
+  //     {/* Capture expense details from the user */}
+  //     <View style ={styles.inputContainer}>
+  //       <TextInput
+  //         placeholder="Enter expense amount"
+  //         keyboardType="numeric"
+  //         onChangeText={setExpense}
+  //         value={expense}
+  //         style = {styles.input}
+  //       />
+  //       <TextInput
+  //         placeholder="Enter Category"
+  //         keyboardType="text"
+  //         onChangeText={setCategory}
+  //         value={category}
+  //         style = {styles.input}
+  //       />
+  //       <TextInput
+  //         placeholder="Enter Description"
+  //         keyboardType="text"
+  //         onChangeText={setDescription}
+  //         value={description}
+  //         style = {styles.input}
+  //       />
+  //     </View>
+
+  //     {/* Add expense button */}
+  //     <View style = {styles.addButtonContainer}>
+  //       <TouchableOpacity style = {styles.addButton} onPress={addexpense} >
+  //         <Text style ={styles.addButtonText}>Add Expense</Text>
+  //       </TouchableOpacity> 
+  //     </View>
+
+  //     {/* Display expense history */}
+  //     {history.length > 0 && (
+  //       <><View>
+  //         <Text style ={styles.recentTitle}>Expense History:</Text>
+  //       </View>
+  //       <FlatList
+  //           data={filterhistory}
+  //           keyExtractor={(item, index) => index.toString()}
+  //           renderItem={({ item }) => (
+  //             <View style ={styles.expenseItemAlign}>
+  //               <View style = {styles.expenseCard}>
+  //                 <View style={styles.expenseDetails}>
+
+  //                   <Text style={styles.expenseDescription}>
+  //                     {item.Description}
+  //                   </Text>
+
+  //                   <Text style={styles.expenseCategory}>
+  //                     {item.Category}
+  //                   </Text>
+  //                 </View>
+  //                 <Text style={styles.expenseAmount}>{item.Amount}</Text>
+  //               </View>
+  //               <View style={styles.deleteCard}>
+  //                 <TouchableOpacity style = {styles.deleteButton} onPress={() => removeExpense(item)} >
+  //                   <Text style ={styles.deleteIcon}>🗑️</Text>
+  //                 </TouchableOpacity> 
+  //               </View>
+  //             </View>
+  //           )} /></>
+  // //     )}
+  // //   </SafeAreaView>
+  // )
 
   return (
-    
-    <SafeAreaView style={styles.container}>
-      
 
-       {/* Display application header  */}
-      <View>
-        <Text style = {styles.header}>Expense Tracker</Text>
-      </View>
-
-      {/* Display total amount spent */}
-      <View style = {styles.spentCard}>
-        <Text style = {styles.spentLabel}>Total Spent:</Text>
-        <Text style ={styles.spentAmount}>{spent}</Text>
-      </View>
-      
-      {/* Display category filters  */}
-      <View style={styles.filterContainer}>
-        {filterval.map((item) => {
-
-        const selected = selectedfilter === item
-
-        return (
-          <TouchableOpacity
-            key={item}
-            style={[
-              styles.filterButton,
-              selected && styles.selectedFilter
-            ]}
-            onPress={() => setSelectedFilter(item)}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                selected && styles.selectedFilterText
-              ]}
-            >
-            {item}
-            </Text>
-          </TouchableOpacity>
-          )
-          })}
-      </View>
-
-      {/* Capture expense details from the user */}
-      <View style ={styles.inputContainer}>
-        <TextInput
-          placeholder="Enter expense amount"
-          keyboardType="numeric"
-          onChangeText={setExpense}
-          value={expense}
-          style = {styles.input}
-        />
-        <TextInput
-          placeholder="Enter Category"
-          keyboardType="text"
-          onChangeText={setCategory}
-          value={category}
-          style = {styles.input}
-        />
-        <TextInput
-          placeholder="Enter Description"
-          keyboardType="text"
-          onChangeText={setDescription}
-          value={description}
-          style = {styles.input}
-        />
-      </View>
-
-      {/* Add expense button */}
-      <View style = {styles.addButtonContainer}>
-        <TouchableOpacity style = {styles.addButton} onPress={addexpense} >
-          <Text style ={styles.addButtonText}>Add Expense</Text>
-        </TouchableOpacity> 
-      </View>
-
-      {/* Display expense history */}
-      {history.length > 0 && (
-        <><View>
-          <Text style ={styles.recentTitle}>Expense History:</Text>
-        </View>
-        <FlatList
-            data={filterhistory}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style ={styles.expenseItemAlign}>
-                <View style = {styles.expenseCard}>
-                  <View style={styles.expenseDetails}>
-
-                    <Text style={styles.expenseDescription}>
-                      {item.Description}
-                    </Text>
-
-                    <Text style={styles.expenseCategory}>
-                      {item.Category}
-                    </Text>
-                  </View>
-                  <Text style={styles.expenseAmount}>{item.Amount}</Text>
-                </View>
-                <View style={styles.deleteCard}>
-                  <TouchableOpacity style = {styles.deleteButton} onPress={() => removeExpense(item)} >
-                    <Text style ={styles.deleteIcon}>🗑️</Text>
-                  </TouchableOpacity> 
-                </View>
-              </View>
-            )} /></>
-      )}
-    </SafeAreaView>
+    <NavigationContainer>
+      <RootStack/>
+    </NavigationContainer>
   )
 }
 
