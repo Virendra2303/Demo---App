@@ -9,18 +9,50 @@ import {Button} from '@react-navigation/elements'
 
 
 const HomeScreen = () => {
+  const [spent,setSpent] = useState(0) // Stores the total amount spentAmount
+  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
+  const [category,setCategory] = useState('') // Stores the current expense category
+  const [description,setDescription] = useState('')  // Stores the current expense description
+  const [history,setHistory] = useState([]) // Stores the complete expense history
+  const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
+  const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
+
   const navigation = useNavigation()
+  
   return (
     <View>
-      <Text>Expense Tracker</Text>
-       <Button onPress = {() => navigation.navigate('AddExpense')}>
+      {/* Display application header  */}
+      <Text style = {styles.header}>Expense Tracker</Text>
+
+      {/* Display total amount spent */}
+      <View style = {styles.spentCard}>
+        <Text style = {styles.spentLabel}>Total Spent:</Text>
+        <Text style ={styles.spentAmount}>{spent}</Text>
+      </View>
+       <Button onPress = {() => navigation.navigate('AddExpense',{
+        spent,setSpent,
+        expense,setExpense,
+        category,setCategory,
+        description,setDescription,
+        history,setHistory,
+        filterval,setFilterVal,
+        selectedfilter,setSelectedFilter
+       })}>
         Add Expense
       </Button>
     </View>
   )
 }
 
-const AddExpense = () => {
+const AddExpense = ({route}) => {
+  const {spent,setSpent,
+        expense,setExpense,
+        category,setCategory,
+        description,setDescription,
+        history,setHistory,
+        filterval,setFilterVal,
+        selectedfilter,setSelectedFilter} = route.params  
+  
   // Adds a new expense to the history and updates filters
   const addexpense = () => {
     setSpent(spent + parseInt(expense) || 0)
@@ -85,13 +117,9 @@ const RootStack = () => {
 }
 const App = () => {
  
-  const [spent,setSpent] = useState(0) // Stores the total amount spent
-  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
-  const [category,setCategory] = useState('') // Stores the current expense category
-  const [description,setDescription] = useState('')  // Stores the current expense description
-  const [history,setHistory] = useState([]) // Stores the complete expense history
-  const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
-  const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
+  
+  
+
   // // Filters expenses based on the selected category
   // const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter) 
 
