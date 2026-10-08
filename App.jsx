@@ -5,20 +5,32 @@ import {SafeAreaView} from 'react-native-safe-area-context'
 import {useNavigation,NavigationContainer} from '@react-navigation/native'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {Button} from '@react-navigation/elements'
-
-
+import {ExpenseCard} from './Components/expenseCard'
 
 const HomeScreen = () => {
   const [spent,setSpent] = useState(0) // Stores the total amount spentAmount
-  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
-  const [category,setCategory] = useState('') // Stores the current expense category
-  const [description,setDescription] = useState('')  // Stores the current expense description
+  
   const [history,setHistory] = useState([]) // Stores the complete expense history
   const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
   const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
 
   const navigation = useNavigation()
-  
+ // Filters expenses based on the selected category
+  const filterhistory = selectedfilter === 'All' ? history : history.filter((item) => item.Category === selectedfilter) 
+   // Removes an expense and updates the total and category filters
+  const removeExpense = (item) => {
+    setHistory((history) => {
+      const newHistory = history.filter((_, i) => i !== history.indexOf(item))
+
+      if (!newHistory.some((expense) => expense.Category === item.Category)) {
+        setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
+      )
+      }
+    return newHistory
+    })
+    setSpent(spent - parseInt(item.Amount) || 0)
+  }
+
   return (
     <View>
       {/* Display application header  */}
@@ -31,33 +43,52 @@ const HomeScreen = () => {
       </View>
        <Button onPress = {() => navigation.navigate('AddExpense',{
         spent,setSpent,
-        expense,setExpense,
-        category,setCategory,
-        description,setDescription,
         history,setHistory,
         filterval,setFilterVal,
-        selectedfilter,setSelectedFilter
+        selectedfilter,setSelectedFilter,
+        filterhistory
        })}>
         Add Expense
       </Button>
+
+      {history.length > 0 && (
+        <><View>
+          <Text style ={styles.recentTitle}>Expense History:</Text>
+        </View>
+        <FlatList
+          data={filterhistory}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+              <View style ={styles.expenseItemAlign}>
+                <ExpenseCard item={item}/>
+                <View style={styles.deleteCard}>
+                  <TouchableOpacity style = {styles.deleteButton} onPress={() => removeExpense(item)} >
+                    <Text style ={styles.deleteIcon}>🗑️</Text>
+                  </TouchableOpacity> 
+                </View>
+              </View>
+            )} /></>
+       )}
     </View>
   )
 }
 
 const AddExpense = ({route}) => {
   const {spent,setSpent,
-        expense,setExpense,
-        category,setCategory,
-        description,setDescription,
         history,setHistory,
         filterval,setFilterVal,
-        selectedfilter,setSelectedFilter} = route.params  
+        } = route.params  
   
+  const [expenseHistory,setExpenseHistory] = useState(history) // Stores the complete expense history
+  const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
+  const [category,setCategory] = useState('') // Stores the current expense category
+  const [description,setDescription] = useState('')  // Stores the current expense description
   // Adds a new expense to the history and updates filters
   const addexpense = () => {
     setSpent(spent + parseInt(expense) || 0)
     if(expense>=1){
       setHistory((history) => [...history, {Amount : expense.trim(), Category : category.trim(), Description : description.trim()}])
+       setExpenseHistory((history) => [...history, {Amount : expense.trim(), Category : category.trim(), Description : description.trim()}])
       setFilterVal((filterval)=> { if (!filterval.includes(category.trim())) { return [...filterval,category.trim() ]}  return filterval} )
     }
     else{
@@ -66,6 +97,20 @@ const AddExpense = ({route}) => {
     setExpense(0)
     setCategory('')
     setDescription('')
+  }
+
+  const removeExpense = (item) => {
+    setHistory((history) => {
+      const newHistory = history.filter((_, i) => i !== history.indexOf(item))
+
+      if (!newHistory.some((expense) => expense.Category === item.Category)) {
+        setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
+      )
+      }
+    return newHistory
+    })
+
+    setSpent(spent - parseInt(item.Amount) || 0)
   }
 
   return (
@@ -101,7 +146,29 @@ const AddExpense = ({route}) => {
             <Text style ={styles.addButtonText}>Add Expense</Text>
           </TouchableOpacity> 
         </View>
+      
+      {history.length > 0 && (
+        <><View>
+          <Text style ={styles.recentTitle}>Expense History:</Text>
+        </View>
+        <FlatList
+          data={expenseHistory}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+              <View style ={styles.expenseItemAlign}>
+                <ExpenseCard item={item}/>
+                <View style={styles.deleteCard}>
+                  <TouchableOpacity style = {styles.deleteButton} onPress={() => removeExpense(item)} >
+                    <Text style ={styles.deleteIcon}>🗑️</Text>
+                  </TouchableOpacity> 
+                </View>
+              </View>
+            )} /></>
+       )}
+      
       </SafeAreaView>
+
+       
   )
 }
 
@@ -351,7 +418,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
-
    // ---------------- EXPENSES HISTORY ----------------
 
   recentTitle: {
@@ -368,66 +434,18 @@ const styles = StyleSheet.create({
     flexDirection : 'row'
   } ,
 
-  expenseCard: {
-    flex: 1,
-    minHeight: 76,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
 
-    flexDirection: 'row',
-    alignItems: 'center',
-
-    // Small shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.04,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-
-
-  // Description + category
-  expenseDetails: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-
-  expenseDescription: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#17221E',
-    marginBottom: 3,
-  },
-
-  expenseCategory: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#6D7772',
-  },
-
-   expenseAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#17221E',
-  },
-
-  //---------------DELETE BUTTONS------------------------
+   //---------------DELETE BUTTONS------------------------
   deleteButton: {
-  marginLeft: 1,
-  padding: 1,
-  marginTop: 28
-},
+    marginLeft: 1,
+    padding: 1,
+    marginTop: 28
+  },
 
-deleteIcon: {
-  fontSize: 18,
-  color : '#e61c1c'
-},
+  deleteIcon: {
+    fontSize: 18,
+    color : '#e61c1c' 
+  },
 
   // ---------------- INPUT SECTION ----------------
 
