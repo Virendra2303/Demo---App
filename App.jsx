@@ -7,7 +7,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {Button} from '@react-navigation/elements'
 import {ExpenseCard} from './Components/expenseCard'
 
-const HomeScreen = ({
+const HomeScreen = ({ 
   spent,setSpent, history, setHistory,
   filterVal, setFilterVal, selectedFilter, setSelectedFilter,
 }) => {
@@ -17,19 +17,20 @@ const HomeScreen = ({
  // Filters expenses based on the selected category
   const filterhistory = selectedFilter === 'All' ? history : history.filter((item) => item.Category === selectedFilter) 
    // Removes an expense and updates the total and category filters
-  const removeExpense = (item) => {
+   const removeExpense = (item) => {
     setHistory((history) => {
       const newHistory = history.filter((_, i) => i !== history.indexOf(item))
 
       if (!newHistory.some((expense) => expense.Category === item.Category)) {
-        setFilterVal((filterval) =>filterval.filter((currval) => currval !== item.Category)
+        setFilterVal((filterVal) =>filterVal.filter((currVal) => currVal !== item.Category)
       )
       }
     return newHistory
     })
+
     setSpent(spent - parseInt(item.Amount) || 0)
   }
-
+   
   return (
     <View>
       {/* Display application header  */}
@@ -86,6 +87,17 @@ const HomeScreen = ({
                     <Text style ={styles.deleteIcon}>🗑️</Text>
                   </TouchableOpacity> 
                 </View>
+                <View style={styles.deleteCard}>
+                  <TouchableOpacity style = {styles.deleteButton} onPress={() => navigation.navigate('EditExpense',{
+                    e_expense : item.Amount,
+                    e_category : item.Category,
+                    e_description : item.Description,
+                    e_item : item
+
+                  })} >
+                    <Text style ={styles.deleteIcon}>🖋️</Text>
+                  </TouchableOpacity> 
+                </View>
               </View>
             )} /></>
        )}
@@ -98,7 +110,7 @@ const AddExpense = ({ spent, history, setSpent, setHistory, filterVal, setFilter
   const [expense,setExpense] = useState(0) // Stores the current expense amount entered by the user
   const [category,setCategory] = useState('') // Stores the current expense category
   const [description,setDescription] = useState('')  // Stores the current expense description
-
+  const navigation = useNavigation()
     const filterhistory = selectedFilter === 'All' ? history : history.filter((item) => item.Category === selectedFilter) 
   // Adds a new expense to the history and updates filters
   const addexpense = () => {
@@ -113,7 +125,6 @@ const AddExpense = ({ spent, history, setSpent, setHistory, filterVal, setFilter
     setExpense(0)
     setCategory('')
     setDescription('')
-    Alert.alert("Expense succesfully added. Please check home page")
   }
 
   const removeExpense = (item) => {
@@ -207,6 +218,18 @@ const AddExpense = ({ spent, history, setSpent, setHistory, filterVal, setFilter
                     <Text style ={styles.deleteIcon}>🗑️</Text>
                   </TouchableOpacity> 
                 </View>
+                <View style={styles.deleteCard}>
+                  <TouchableOpacity style = {styles.deleteButton} onPress={() => navigation.navigate('EditExpense',{
+                    e_expense : item.Amount,
+                    e_category : item.Category,
+                    e_description : item.Description,
+                    e_item : item
+
+                  })} >
+                    <Text style ={styles.deleteIcon}>🖋️</Text>
+                  </TouchableOpacity> 
+                </View>
+                 
               </View>
             )} /></>
        )}
@@ -215,6 +238,90 @@ const AddExpense = ({ spent, history, setSpent, setHistory, filterVal, setFilter
        
   )
 }
+
+const EditExpense = ({ e_expense,e_category,e_description,e_item,spent, history, setSpent, setHistory, filterVal, setFilterVal}) => {
+
+  const [expense,setExpense] = useState(e_expense) // Stores the current expense amount entered by the user
+  const [category,setCategory] = useState(e_category) // Stores the current expense category
+  const [description,setDescription] = useState(e_description)  // Stores the current expense description
+  const navigation = useNavigation()
+  // Adds a new expense to the history and updates filters
+  const editexpense = () => {
+
+    if(expense>=1){
+  
+      setHistory((history) => {
+        const newHistory = history.filter((_, i) => i !== history.indexOf(e_item))
+
+        if (!newHistory.some((expense) => expense.Category === e_item.Category)) {
+          setFilterVal((filterVal) =>filterVal.filter((currVal) => currVal !== e_item.Category)
+        )
+        }
+      return newHistory
+      })
+
+      setSpent(spent - e_expense + parseInt(expense) || 0)
+      setHistory((history) => [...history, {Amount : expense.trim(), Category : category.trim(), Description : description.trim()}])
+      setFilterVal((filterVal)=> { if (!filterVal.includes(category.trim())) { return [...filterVal,category.trim() ]}  return filterVal} )
+      Alert.alert("Expense is Edited","Your expense has been updated successfully.",[
+        {
+          text : 'Ok',
+          onPress : () => navigation.navigate('Home')
+        }
+      ])
+
+    }
+    else{
+      Alert.alert("Please Enter Number only")
+    }    
+    setExpense(0)
+    setCategory('')
+    setDescription('')
+   
+  }
+
+  return (
+      <SafeAreaView>
+        {/* Capture expense details from the user */}
+        <View style ={styles.inputContainer}>
+          <TextInput
+            defaultValue={e_expense}
+            placeholder="Enter expense amount"
+            keyboardType="numeric"
+            onChangeText={setExpense}
+            value={expense}
+            style = {styles.input}
+          />
+          <TextInput
+            defaultValue={e_category}
+            placeholder="Enter Category"
+            keyboardType="text"
+            onChangeText={setCategory}
+            value={category}
+            style = {styles.input}
+          />
+          <TextInput
+            defaultValue={e_category}
+            placeholder="Enter Description"
+            keyboardType="text"
+            onChangeText={setDescription}
+            value={description}
+            style = {styles.input}
+          />
+        </View>
+
+        {/* Add expense button */}
+        <View style = {styles.addButtonContainer}>
+          <TouchableOpacity style = {styles.addButton} onPress={editexpense} >
+            <Text style ={styles.addButtonText}>Edit Expense</Text>
+          </TouchableOpacity> 
+        </View>
+      </SafeAreaView>
+
+       
+  )
+}
+ 
 
 const Stack = createNativeStackNavigator()
 
@@ -225,8 +332,9 @@ const RootStack = () => {
   const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
   return (
     <Stack.Navigator>
-      <Stack.Screen name ='Home' component = {() => <HomeScreen spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} />
+      <Stack.Screen name ='Home' component = {() => <HomeScreen  spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} />
       <Stack.Screen name = 'AddExpense' component = {() => <AddExpense spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} />
+      <Stack.Screen name = 'EditExpense' component = {({route}) => <EditExpense {...route.params} spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} />} />
     </Stack.Navigator>
   )
 }
