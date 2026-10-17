@@ -1,11 +1,15 @@
 // Import required React Native components and hooks
-import { StyleSheet, Text, View, TextInput, FlatList, Alert,TouchableOpacity } from 'react-native'
-import {useState} from 'react'
+import { StyleSheet, Text, View, TextInput, FlatList, Alert,TouchableOpacity ,StatusBar} from 'react-native'
+import {useState,useEffect} from 'react'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import {useNavigation,NavigationContainer} from '@react-navigation/native'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {Button} from '@react-navigation/elements'
 import {ExpenseCard} from './Components/expenseCard'
+import {createAsyncStorage} from '@react-native-async-storage/async-storage'
+
+const storage = createAsyncStorage('ExpenseTracker')
+const keyStorage = 'KeyExpenseTracker'
 
 const HomeScreen = ({ 
   spent,setSpent, history, setHistory,
@@ -33,18 +37,18 @@ const HomeScreen = ({
    
   return (
     <View>
-      {/* Display application header  */}
-      <Text style = {styles.header}>Expense Tracker</Text>
+      
 
       {/* Display total amount spent */}
       <View style = {styles.spentCard}>
         <Text style = {styles.spentLabel}>Total Spent:</Text>
         <Text style ={styles.spentAmount}>{spent}</Text>
       </View>
-       <Button onPress = {() => navigation.navigate('AddExpense')}>
-        Add Expense
-      </Button>
-      
+      <View style = {styles.addExpenseButtonContainer}>
+        <TouchableOpacity style = {styles.addExpenseButton} onPress = {() => navigation.navigate('AddExpense')} >
+          <Text style ={styles.addExpenseButtonText}>Add Expense</Text>
+        </TouchableOpacity> 
+      </View>
       {/* Display category filters  */}
        <View style={styles.filterContainer}>
          {filterVal.map((item) => {
@@ -330,19 +334,140 @@ const RootStack = () => {
   const [history,setHistory] = useState([]) // Stores the complete expense history
   const [filterval,setFilterVal] = useState(["All"]) // Stores available categories for filtering expenses
   const [selectedfilter,setSelectedFilter] = useState("All") // Stores the currently selected category filter 
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // // Load saved expenses once, when the app starts.
+  // useEffect(() => {
+  //   const loadHistory = async () => {
+  //     try {
+  //       const saved = await storage.getItem(keyStorage)
+  //       if (saved !== null) {
+  //         const parsed = JSON.parse(saved)
+  //          // Restore total spent
+  //          if (Array.isArray(parsed)) {
+  //           setHistory(parsed);
+  //         } else {
+  //           console.log("Invalid history data:", parsed);
+  //           setHistory([])
+  //         }
+  //         const total = parsed.reduce(
+  //           (sum, item) => sum + (Number(item.Amount) || 0),
+  //           0
+  //         );
+
+  //         setSpent(total);
+
+  //         // Restore category filters
+  //         const categories = [
+  //           "All",
+  //           ...new Set(parsed.map(item => item.Category))
+  //         ];
+  //         setFilterVal(categories);
+  //       }
+       
+  //     } catch (error) {
+  //       console.error('Failed to load expenses:', error)
+  //       Alert.alert('Storage error', 'Could not load your saved expenses.')
+  //     }
+  //     finally{
+  //       setIsLoaded(true)
+  //     }
+  //   }
+  //   loadHistory()
+  // }, [])
+
+  // // Persist additions, edits, and deletions after loading is complete.
+  // useEffect(() => {
+  //   if (!isLoaded) return
+  //   const saveHistory = async () => {
+  //     try {
+  //       await storage.setItem(keyStorage, JSON.stringify(history))
+  //     } catch (error) {
+  //       console.error('Failed to save expenses:', error)
+  //       Alert.alert('Storage error', 'Your changes could not be saved.')
+  //     }
+  //   }
+  //   saveHistory()
+  // }, [history,isLoaded])
+
   return (
     <Stack.Navigator>
-      <Stack.Screen name ='Home' component = {() => <HomeScreen  spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} />
-      <Stack.Screen name = 'AddExpense' component = {() => <AddExpense spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} />
-      <Stack.Screen name = 'EditExpense' component = {({route}) => <EditExpense {...route.params} spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} />} />
+      <Stack.Screen name ='Home' component = {() => <HomeScreen  spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />} 
+      options={{
+      headerStyle: {
+        backgroundColor: '#FFFFFF',
+      },
+      headerTitle: () => (
+        <Text
+          style={{
+            fontFamily: 'Kavoon-Regular',
+            fontSize: 26,
+            color: '#17221E',
+            textAlign: 'center',
+            fontWeight: 700
+          }}
+        >
+          Expense Tracker
+        </Text>
+      ),
+      headerTitleAlign: 'center',
+    }}/>
+      <Stack.Screen name = 'AddExpense' component = {() => <AddExpense spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} selectedFilter={selectedfilter} setSelectedFilter={setSelectedFilter} />}
+      options={{
+      headerStyle: {
+        backgroundColor: '#FFFFFF',
+      },
+      headerTitle: () => (
+        <Text
+          style={{
+            fontFamily: 'Kavoon-Regular',
+            fontSize: 26,
+            color: '#17221E',
+            textAlign: 'center',
+            fontWeight: 700
+          }}
+        >
+          Add Expense
+        </Text>
+      ),
+      headerTitleAlign: 'center',}} />
+      <Stack.Screen name = 'EditExpense' component = {({route}) => <EditExpense {...route.params} spent={spent} setSpent={setSpent} history={history} setHistory={setHistory} filterVal={filterval} setFilterVal={setFilterVal} />} 
+      options={{
+      headerStyle: {
+        backgroundColor: '#FFFFFF',
+      },
+      headerTitle: () => (
+        <Text
+          style={{
+            fontFamily: 'Kavoon-Regular',
+            fontSize: 26,
+            color: '#17221E',
+            textAlign: 'center',
+            fontWeight: 700
+          }}
+        >
+          Edit Expense
+        </Text>
+      ),
+      headerTitleAlign: 'center',}}/>
     </Stack.Navigator>
   )
 }
 const App = () => {
+
+
   return (
-    <NavigationContainer>
-      <RootStack/>
-    </NavigationContainer>
+     <>
+      <StatusBar
+        hidden={false}
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
+      />
+
+      <NavigationContainer>
+        <RootStack />
+      </NavigationContainer>
+    </>
   )
 }
 
@@ -490,6 +615,29 @@ const styles = StyleSheet.create({
   color: '#FFFFFF',
   fontSize: 24,
   fontWeight: '600',
+},
+
+addExpenseButtonContainer: {
+  marginTop: 16,
+  marginHorizontal: 20,
+},
+
+addExpenseButton: {
+  height: 52,
+  backgroundColor: '#A8E9AF',
+  borderRadius: 14,
+  justifyContent: 'center',
+  alignItems: 'center',
+
+  // Subtle Android shadow
+  elevation: 2,
+},
+
+addExpenseButtonText: {
+  color: '#164B32',
+  fontSize: 16,
+  fontWeight: '700',
+  letterSpacing: 0.3,
 },
 
   
